@@ -1,0 +1,16 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Secrets and local data (never commit these)
+.env
+instance/
+*.db
+
+# Demo videos are too large for the repo; upload them to YouTube instead
+demo/*.mp4
+
+# Local tooling and OS files
+.claude/
+.DS_Store

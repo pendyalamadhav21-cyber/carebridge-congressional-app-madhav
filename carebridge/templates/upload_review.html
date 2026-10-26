@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Review your plan{% endblock %}
+{% block content %}
+<h1>Check what we found</h1>
+<p class="muted">Compare each item with your paper instructions. Fix anything that's wrong and untick anything that shouldn't be on your checklist. Your care team will also review this plan.</p>
+
+{% if warnings %}
+<div class="flash error"><strong>Please double-check with your care team:</strong>
+  <ul>{% for w in warnings %}<li>{{ w }}</li>{% endfor %}</ul></div>
+{% endif %}
+
+<form method="post" action="{{ url_for('upload_confirm') }}" class="stack">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="full_text" value="{{ full_text }}">
+  {% for r in rows %}
+  <div class="card review-row">
+    <label class="keep"><input type="checkbox" name="keep" value="{{ loop.index0 }}" checked> Include</label>
+    <div class="review-fields">
+      <label>Type
+        <select name="kind">
+          {% for k, label in [('medication', 'Medication'), ('exercise', 'Exercise'), ('other', 'Other task')] %}
+          <option value="{{ k }}" {{ 'selected' if r.kind == k }}>{{ label }}</option>{% endfor %}
+        </select></label>
+      <label>What <input name="title" value="{{ r.title }}" maxlength="200" required></label>
+      <label>Details <input name="details" value="{{ r.details }}" maxlength="500"></label>
+      <label>Time <input type="time" name="time" value="{{ r.time }}" required></label>
+    </div>
+    {% if r.quote %}<p class="quote small">From your document: “{{ r.quote }}”</p>{% endif %}
+  </div>
+  {% else %}
+  <div class="card empty"><p>We couldn't find any medications or exercises in that photo.</p></div>
+  {% endfor %}
+  <details class="card"><summary>Full text we read</summary><pre class="pre">{{ full_text }}</pre></details>
+  {% if rows %}<button class="btn primary">Add to my checklist</button>{% endif %}
+  <a class="btn" href="{{ url_for('upload') }}">Try another photo</a>
+</form>
+{% endblock %}

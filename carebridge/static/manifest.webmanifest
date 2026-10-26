@@ -1,0 +1,10 @@
+{
+  "name": "CareBridge",
+  "short_name": "CareBridge",
+  "start_url": "/patient",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f7f9",
+  "theme_color": "#0f766e",
+  "icons": [{ "src": "/static/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

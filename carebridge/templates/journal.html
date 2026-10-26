@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Journal{% endblock %}
+{% block content %}
+<h1>Recovery journal</h1>
+<p class="muted">A space for your thoughts, struggles and wins. Your care team sees your mood and how you're doing. They only see the full text of an entry if it suggests you may need extra support.</p>
+
+<form method="post" class="card stack" data-busy-form>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <fieldset class="moods">
+    <legend>How are you feeling today?</legend>
+    {% for value, label in MOODS.items() %}
+    <label class="mood"><input type="radio" name="mood" value="{{ value }}" {{ 'checked' if value == 3 }}>
+      <span>{{ value }}</span><small>{{ label }}</small></label>
+    {% endfor %}
+  </fieldset>
+  <label>What's on your mind?
+    <textarea name="text" rows="6" maxlength="5000" required placeholder="Today I…"></textarea></label>
+  <button class="btn primary" data-busy-label="Saving…">Save entry</button>
+</form>
+
+<h2>Past entries</h2>
+{% for e in entries %}
+<article class="card entry">
+  <div class="entry-head">{% if e.mood %}<span class="score">Mood {{ e.mood }}/5 · {{ MOODS[e.mood] }}</span>{% endif %}
+    <span class="muted small">{{ e.created_at|localtime }}</span>
+    {% for em in e.emotions %}<span class="pill">{{ em }}</span>{% endfor %}</div>
+  <p class="pre-wrap">{{ e.text }}</p>
+</article>
+{% else %}
+<p class="muted">No entries yet.</p>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Today{% endblock %}
+{% block content %}
+<div class="hello">
+  <div>
+    <h1>Welcome back, {{ user_name.split(' ')[0] }}</h1>
+    <p class="muted">{{ today }}</p>
+  </div>
+  <div class="ring-wrap" aria-label="Today's progress">
+    <svg viewBox="0 0 36 36" class="ring" data-ring>
+      <circle cx="18" cy="18" r="15.9" class="ring-bg"></circle>
+      <circle cx="18" cy="18" r="15.9" class="ring-fg" pathLength="100"
+              stroke-dasharray="{{ (100 * done_count / items|length)|round if items else 0 }} 100" data-ring-fg></circle>
+    </svg>
+    <div class="ring-label"><span><strong data-done>{{ done_count }}</strong>/<span data-total>{{ items|length }}</span></span><small>done today</small></div>
+  </div>
+</div>
+
+{% if week is not none %}<p class="muted">Last 7 days: <strong>{{ week }}%</strong> of your plan completed.</p>{% endif %}
+
+{% if not items %}
+<div class="card empty">
+  <h2>No checklist yet</h2>
+  <p>Take a photo of your discharge instructions and we'll turn them into a daily checklist.</p>
+  <a class="btn primary" href="{{ url_for('upload') }}">Add discharge instructions</a>
+</div>
+{% else %}
+<ul class="checklist">
+  {% for it in items %}
+  <li class="check-item {{ 'done' if it.done }}">
+    <button class="tick" data-toggle="{{ url_for('toggle_item', item_id=it.id) }}" aria-pressed="{{ 'true' if it.done else 'false' }}"
+            aria-label="Mark {{ it.title }} {{ 'not done' if it.done else 'done' }}"></button>
+    <div class="ci-body">
+      <div class="ci-top"><span class="time">{{ it.time|clock }}</span><span class="pill {{ it.kind }}">{{ {'medication': 'Medication', 'exercise': 'Exercise', 'other': 'Task'}[it.kind] }}</span>
+        {% if it.pending %}<span class="pill pending" title="Your care team hasn't confirmed this item yet">Awaiting review</span>{% endif %}</div>
+      <div class="ci-title">{{ it.title }}</div>
+      {% if it.details %}<div class="muted small">{{ it.details }}</div>{% endif %}
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+<section id="reminders" class="card" data-reminders data-vapid="{{ vapid_key }}"
+         data-subscribe="{{ url_for('push_subscribe') }}" data-unsubscribe="{{ url_for('push_unsubscribe') }}"
+         data-test="{{ url_for('push_test') }}">
+  <div class="reminder-head">
+    <div>
+      <h2>Reminders</h2>
+      <p class="small muted" data-reminder-status>Checking notification settings on this device…</p>
+    </div>
+    <div class="row">
+      <button type="button" class="btn primary" data-reminder-on hidden>Turn on reminders</button>
+      <button type="button" class="btn" data-reminder-test hidden>Send test</button>
+      <button type="button" class="btn" data-reminder-off hidden>Turn off on this device</button>
+    </div>
+  </div>
+  <form method="post" action="{{ url_for('notification_settings') }}" class="reminder-prefs">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label class="check"><input type="checkbox" name="followups" {{ 'checked' if prefs.followups }}>
+      Send a second reminder 30 minutes later if an item is still not done</label>
+    <label class="check"><input type="checkbox" name="show_details" {{ 'checked' if prefs.show_details }}>
+      Show medication and exercise names in notifications (visible on your lock screen)</label>
+    <button class="btn small">Save settings</button>
+  </form>
+  <p class="small muted">You will be notified at each item's scheduled time. Reminders are sent to {{ devices }} device{{ '' if devices == 1 else 's' }}.</p>
+</section>
+
+<div class="grid3">
+  <a class="card tile" href="{{ url_for('journal') }}"><strong>Daily check-in</strong><small class="muted">Record how you are feeling in your journal</small></a>
+  <a class="card tile" href="{{ url_for('chat') }}"><strong>Care plan questions</strong><small class="muted">Ask the recovery companion</small></a>
+  <a class="card tile" href="{{ url_for('upload') }}"><strong>New instructions</strong><small class="muted">Scan a discharge document</small></a>
+</div>
+{% endblock %}

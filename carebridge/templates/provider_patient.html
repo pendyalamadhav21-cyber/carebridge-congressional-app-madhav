@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}{{ name }}{% endblock %}
+{% block content %}
+<a href="{{ url_for('provider_home') }}" class="small">Back to all patients</a>
+<div class="patient-head">
+  <div>
+    <h1>{{ name }}</h1>
+    <p class="muted">{{ condition }} · MRN {{ mrn }} · DOB {{ dob }}{% if p.discharged_on %} · Discharged {{ p.discharged_on }}{% endif %}</p>
+  </div>
+  <div class="actions">
+    <a class="btn" href="{{ url_for('provider_fhir', patient_id=p.id) }}">Download FHIR bundle</a>
+    <form method="post" action="{{ url_for('provider_send_ehr', patient_id=p.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn primary" {% if not ehr_configured %}disabled title="Set FHIR_SERVER_URL in .env to enable"{% endif %}>Send to EHR</button>
+    </form>
+  </div>
+</div>
+
+<section id="alerts" class="card">
+  <h2>Risk alerts</h2>
+  {% if not webhook_configured %}<p class="flash info small">SMS/email escalation webhook isn't configured (ESCALATION_WEBHOOK_URL). Alerts show here only.</p>{% endif %}
+  {% for a in alerts %}
+  <div class="alert-row {{ a.status }}">
+    <span class="risk {{ a.level }}">{{ a.level }}</span>
+    <div class="grow">
+      <div>{{ a.summary }}</div>
+      <div class="small muted">From {{ a.source }} · {{ a.created_at|localtime }} · {{ a.status }}
+        {% for d in a.delivery %} · notify: {{ d.status }}{% endfor %}</div>
+    </div>
+    {% if a.status != 'resolved' %}
+    <form method="post" action="{{ url_for('alert_action', alert_id=a.id, action='acknowledged' if a.status == 'open' else 'resolved') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn small">{{ 'Acknowledge' if a.status == 'open' else 'Resolve' }}</button>
+    </form>
+    {% endif %}
+  </div>
+  {% else %}<p class="muted">No alerts.</p>{% endfor %}
+</section>
+
+<section id="adherence" class="card">
+  <h2>Care plan adherence (last 7 days){% if overall is not none %}: {{ overall }}%{% endif %}</h2>
+  {% for r in per_item %}
+  <div class="adh-row">
+    <div class="grow"><strong>{{ r.title }}</strong> <span class="small muted">{{ r.time|clock }} · {{ r.details }}</span></div>
+    <svg class="bar wide" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect width="100" height="8" class="bar-bg"></rect>
+      <rect width="{{ r.pct }}" height="8" class="{{ 'bar-ok' if r.pct >= 80 else 'bar-warn' if r.pct >= 50 else 'bar-bad' }}"></rect></svg>
+    <span class="small num">{{ r.done }}/{{ r.due }} · {{ r.pct }}%</span>
+    <form method="post" action="{{ url_for('remove_item', item_id=r.item.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="link small" title="Remove from checklist">Remove</button>
+    </form>
+  </div>
+  {% else %}<p class="muted">No active checklist items.</p>{% endfor %}
+</section>
+
+<section class="card">
+  <h2>Mood, last 14 days</h2>
+  {% if mood %}
+  <svg viewBox="0 0 600 150" class="mood-chart" role="img" aria-label="Mood trend">
+    {% for v in range(1, 6) %}<line x1="20" x2="580" y1="{{ 130 - (v - 1) * 28 }}" y2="{{ 130 - (v - 1) * 28 }}" class="grid"></line>
+    <text x="0" y="{{ 134 - (v - 1) * 28 }}" class="axis">{{ v }}</text>{% endfor %}
+    <polyline points="{% for pt in mood %}{{ pt.x }},{{ pt.y }} {% endfor %}" class="line"></polyline>
+    {% for pt in mood %}<circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="4" class="dot"><title>{{ pt.label }}: {{ MOODS[pt.mood] }}</title></circle>{% endfor %}
+  </svg>
+  <p class="small muted">1 = very low, 5 = very good</p>
+  {% else %}<p class="muted">No mood check-ins yet.</p>{% endif %}
+</section>
+
+<section class="card">
+  <h2>Journal screening (C-SSRS)</h2>
+  <p class="small muted">Screens are AI-assisted and preliminary. They support clinical judgment and don't replace it. Full text is shown only for flagged entries.</p>
+  {% for j in journals %}
+  <div class="journal-row">
+    <div class="entry-head"><span class="risk {{ j.risk }}">{{ j.risk }}</span>
+      <span class="small muted">{{ j.created_at|localtime }}{% if j.mood %} · mood {{ j.mood }}/5{% endif %}</span>
+      {% for em in j.emotions %}<span class="pill">{{ em }}</span>{% endfor %}
+      {% if j.status == 'keyword_fallback' %}<span class="pill pending">keyword screen, review manually</span>{% endif %}</div>
+    {% if j.summary %}<p class="small">{{ j.summary }}</p>{% endif %}
+    {% if j.flagged %}
+      {% if j.evidence %}<p class="small"><strong>Evidence:</strong> {% for e in j.evidence %}“{{ e }}” {% endfor %}</p>{% endif %}
+      <details><summary class="small">Show full entry</summary><p class="pre-wrap">{{ j.text }}</p></details>
+    {% endif %}
+  </div>
+  {% else %}<p class="muted">No journal entries.</p>{% endfor %}
+</section>
+
+<section id="plan" class="card">
+  <h2>Care plans</h2>
+  {% for c in plans %}
+  <div class="plan-block">
+    <div class="entry-head"><span class="pill {{ 'pending' if c.status == 'pending_review' else '' }}">{{ c.status.replace('_', ' ') }}</span>
+      <span class="small muted">{{ 'Patient scan' if c.source == 'ocr' else 'Added by provider' if c.source == 'provider' else c.source }} · {{ c.created_at|localtime }}</span></div>
+    <ul class="small">{% for i in c['items'] %}<li>{{ i.time|clock }}: {{ i.title }}{% if i.details %} ({{ i.details }}){% endif %}</li>{% endfor %}</ul>
+    {% if c.status == 'pending_review' %}
+    <div class="row">
+      <form method="post" action="{{ url_for('plan_action', plan_id=c.id, action='approved') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn primary small">Approve</button></form>
+      <form method="post" action="{{ url_for('plan_action', plan_id=c.id, action='rejected') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn small">Reject &amp; remove items</button></form>
+    </div>
+    {% endif %}
+  </div>
+  {% else %}<p class="muted">No care plans.</p>{% endfor %}
+
+  <h3>Add a checklist item</h3>
+  <form method="post" action="{{ url_for('add_item', patient_id=p.id) }}" class="inline-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <select name="kind"><option value="medication">Medication</option><option value="exercise">Exercise</option><option value="other">Other</option></select>
+    <input name="title" placeholder="e.g. Metoprolol" required maxlength="200">
+    <input name="details" placeholder="e.g. 25 mg by mouth" maxlength="500">
+    <input type="time" name="time" required value="08:00">
+    <button class="btn primary">Add</button>
+  </form>
+</section>
+{% endblock %}

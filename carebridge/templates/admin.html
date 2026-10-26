@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Compliance{% endblock %}
+{% block content %}
+<h1>Compliance overview</h1>
+<section class="card">
+  <h2>Staff training status (HB 300)</h2>
+  <div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Hired</th><th>Latest course</th><th>Expires</th><th>Status</th></tr></thead>
+    <tbody>{% for s in staff %}<tr><td>{{ s.name }}</td><td>{{ s.email }}</td><td>{{ s.role }}</td><td>{{ s.hired_on or '–' }}</td>
+      <td>{{ s.last_course or '–' }}</td><td>{{ s.expires_on or '–' }}</td>
+      <td><span class="risk {{ 'none' if s.current else 'high' }}">{{ 'current' if s.current else 'missing' }}</span></td></tr>{% endfor %}</tbody>
+  </table>
+  </div>
+</section>
+<section class="card">
+  <h2>Audit log (latest 200)</h2>
+  <p class="small muted">Every sign-in, record view, export, and denied access attempt. Entries can't be edited from the app.</p>
+  <div class="table-wrap">
+  <table class="table small">
+    <thead><tr><th>Time</th><th>User</th><th>Role</th><th>Action</th><th>Target</th><th>IP</th><th>Outcome</th></tr></thead>
+    <tbody>{% for l in logs %}<tr class="{{ 'denied' if l.outcome != 'ok' }}"><td>{{ l.ts|localtime }}</td><td>{{ l.email or '–' }}</td><td>{{ l.role or '–' }}</td>
+      <td>{{ l.action }}</td><td>{{ l.target or '' }}</td><td>{{ l.ip }}</td><td>{{ l.outcome }}</td></tr>{% endfor %}</tbody>
+  </table>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Add instructions{% endblock %}
+{% block content %}
+<h1>Scan your discharge instructions</h1>
+<p class="muted">Take a clear photo of your printed or handwritten instructions. We'll read the medications and exercises and build your daily checklist. You'll review everything before it's saved.</p>
+<form method="post" enctype="multipart/form-data" class="card stack" data-busy-form>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label class="drop">
+    <input type="file" name="photo" accept="image/*" capture="environment" required data-preview-input>
+    <span class="drop-text">Select or take a photo of your instructions</span>
+    <img alt="" class="preview" data-preview hidden>
+  </label>
+  <ul class="small muted tips">
+    <li>Lay the page flat in good light, and fit the whole page in the photo.</li>
+    <li>JPG, PNG, WEBP or GIF, up to 5 MB.</li>
+  </ul>
+  <button class="btn primary" data-busy-label="Reading your document… this can take up to a minute">Read my instructions</button>
+</form>
+{% endblock %}

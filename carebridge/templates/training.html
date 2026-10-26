@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Training{% endblock %}
+{% block content %}
+<h1>Privacy training log</h1>
+<p class="muted">Texas HB 300 requires staff who handle health information to complete training on state and federal privacy law for their role, within 90 days of hire and at least every two years. Patient records are locked until you have a current training on file.</p>
+<div class="flash {{ 'success' if current else 'error' }}">{{ 'Your training is current.' if current else 'No current training on file. Patient records are locked.' }}</div>
+<form method="post" class="card inline-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <select name="course" required>{% for c in courses %}<option>{{ c }}</option>{% endfor %}</select>
+  <input type="date" name="completed_on" max="{{ today }}" value="{{ today }}" required>
+  <button class="btn primary">Record completion</button>
+</form>
+<div class="table-wrap card">
+<table class="table">
+  <thead><tr><th>Course</th><th>Completed</th><th>Expires</th></tr></thead>
+  <tbody>{% for l in logs %}<tr><td>{{ l.course }}</td><td>{{ l.completed_on }}</td><td>{{ l.expires_on }}{% if l.expires_on < today %} <span class="risk high">expired</span>{% endif %}</td></tr>
+  {% else %}<tr><td colspan="3" class="muted">No training recorded.</td></tr>{% endfor %}</tbody>
+</table>
+</div>
+{% endblock %}

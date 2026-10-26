@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}CareBridge{% endblock %} · CareBridge</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <link rel="manifest" href="{{ url_for('manifest') }}">
+  <link rel="icon" href="{{ url_for('static', filename='icon.svg') }}" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon.svg') }}">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="top">
+    <a class="brand" href="{{ url_for('home') }}"><span class="mark">CB</span> CareBridge</a>
+    {% if user %}
+    <nav>
+      {% if user.role == 'patient' %}
+        <a href="{{ url_for('patient_home') }}" class="{{ 'on' if request.endpoint == 'patient_home' }}">Today</a>
+        <a href="{{ url_for('upload') }}" class="{{ 'on' if request.endpoint in ('upload', 'upload_confirm') }}">Add instructions</a>
+        <a href="{{ url_for('journal') }}" class="{{ 'on' if request.endpoint == 'journal' }}">Journal</a>
+        <a href="{{ url_for('chat') }}" class="{{ 'on' if request.endpoint == 'chat' }}">Companion</a>
+        <a href="{{ url_for('records') }}" class="{{ 'on' if request.endpoint == 'records' }}">My records</a>
+      {% elif user.role == 'provider' %}
+        <a href="{{ url_for('provider_home') }}" class="{{ 'on' if request.endpoint in ('provider_home', 'provider_patient') }}">Patients</a>
+        <a href="{{ url_for('training') }}" class="{{ 'on' if request.endpoint == 'training' }}">Training</a>
+      {% else %}
+        <a href="{{ url_for('admin_home') }}" class="{{ 'on' if request.endpoint == 'admin_home' }}">Compliance</a>
+        <a href="{{ url_for('training') }}" class="{{ 'on' if request.endpoint == 'training' }}">Training</a>
+      {% endif %}
+    </nav>
+    <div class="who">
+      <span>{{ user_name }}</span>
+      <form method="post" action="{{ url_for('logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="link">Sign out</button>
+      </form>
+    </div>
+    {% endif %}
+  </header>
+  {% if user and user.role == 'patient' %}
+  <div class="crisis-bar">In crisis? Call or text <a href="tel:988">988</a> · Emergency: <a href="tel:911">911</a> · <a href="{{ url_for('support') }}">More support</a></div>
+  {% endif %}
+  <main id="main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}<div class="flash {{ cat }}" role="status">{{ msg }}
+        {% if cat == 'support' %}<a href="{{ url_for('support') }}">View support options</a>{% endif %}</div>{% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="foot">Demo build. Not a medical device, not for real patient data. In an emergency call 911.</footer>
+</body>
+</html>

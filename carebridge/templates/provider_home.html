@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Patients{% endblock %}
+{% block content %}
+<h1>Your patients</h1>
+<p class="muted">Sorted by open risk alerts, then lowest adherence.</p>
+<div class="table-wrap card">
+<table class="table">
+  <thead><tr><th>Patient</th><th>Condition</th><th>7-day adherence</th><th>Latest mood</th><th>Alerts</th><th>Plan review</th></tr></thead>
+  <tbody>
+  {% for p in patients %}
+  <tr>
+    <td><a href="{{ url_for('provider_patient', patient_id=p.id) }}"><strong>{{ p.name }}</strong></a></td>
+    <td>{{ p.condition }}</td>
+    <td>{% if p.adherence is not none %}
+      <svg class="bar" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect width="100" height="8" class="bar-bg"></rect>
+        <rect width="{{ p.adherence }}" height="8" class="{{ 'bar-ok' if p.adherence >= 80 else 'bar-warn' if p.adherence >= 50 else 'bar-bad' }}"></rect></svg>
+      <span class="small">{{ p.adherence }}%</span>{% else %}<span class="muted">No plan</span>{% endif %}</td>
+    <td>{{ (p.mood ~ '/5 · ' ~ MOODS[p.mood]) if p.mood else '–' }}</td>
+    <td>{% if p.alert %}<span class="risk {{ p.alert }}">{{ p.alert }}</span> <span class="small muted">({{ p.alert_count }} open)</span>{% else %}<span class="muted">None</span>{% endif %}</td>
+    <td>{% if p.pending %}<span class="pill pending">{{ p.pending }} to review</span>{% else %}<span class="muted">Up to date</span>{% endif %}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6" class="muted">No patients assigned.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

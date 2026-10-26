@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Support{% endblock %}
+{% block content %}
+{% if urgent %}
+<div class="crisis card">
+  <h1>You're not alone. Please reach out right now.</h1>
+  <p>What you wrote tells us you may be going through something really painful. Your care team has been notified.
+     Talking to someone can help, right now.</p>
+  <div class="crisis-actions">
+    <a class="btn danger big" href="tel:988">Call 988</a>
+    <a class="btn danger big" href="sms:988">Text 988</a>
+    <a class="btn big" href="tel:911">Call 911 if you are in immediate danger</a>
+  </div>
+</div>
+{% else %}
+<h1>Support is always here</h1>
+{% endif %}
+<div class="card stack">
+  <h2>24/7 help</h2>
+  <ul class="support-list">
+    <li><strong>988 Suicide &amp; Crisis Lifeline</strong>: call or text <a href="tel:988">988</a>, or chat at 988lifeline.org</li>
+    <li><strong>Crisis Text Line</strong>: text HOME to <a href="sms:741741">741741</a></li>
+    <li><strong>Veterans</strong>: dial 988 then press 1</li>
+    <li><strong>Emergency</strong>: call <a href="tel:911">911</a> or go to the nearest emergency room</li>
+  </ul>
+  <h2>Things that can help right now</h2>
+  <ul>
+    <li>Move somewhere safe, and away from anything you could use to hurt yourself.</li>
+    <li>Reach out to someone you trust and tell them how you're feeling.</li>
+    <li>Breathe slowly: in for 4 seconds, hold for 4, out for 6. Repeat five times.</li>
+  </ul>
+</div>
+{% endblock %}

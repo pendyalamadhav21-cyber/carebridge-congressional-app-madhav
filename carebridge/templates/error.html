@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Error{% endblock %}
+{% block content %}
+<div class="card empty">
+  <h1>{{ {400: 'Something went wrong', 403: 'Not allowed', 404: 'Not found', 413: 'File too large'}.get(code, 'Error') }}</h1>
+  <p class="muted">{{ message if code in (400, 413) else 'You do not have access to this page, or it does not exist.' }}</p>
+  <a class="btn" href="{{ url_for('home') }}">Go home</a>
+</div>
+{% endblock %}

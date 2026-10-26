@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}My records{% endblock %}
+{% block content %}
+<h1>My health records</h1>
+<div class="card stack">
+  <p>You have the right to a copy of your health information. Download your care plan, adherence history, mood check-ins and screening results right now. It's in the HL7 FHIR format that hospitals and health apps understand.</p>
+  <p><a class="btn primary" href="{{ url_for('records_download') }}">Download my records (FHIR JSON)</a></p>
+  <p class="muted small">Downloads are logged for your security. Keep the file somewhere private.</p>
+</div>
+{% endblock %}

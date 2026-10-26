@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block content %}
+<div class="auth">
+  <h1>Welcome back</h1>
+  <p class="muted">Your recovery companion between clinic visits.</p>
+  <form method="post" class="card stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Email <input type="email" name="email" autocomplete="username" required autofocus></label>
+    <label>Password <input type="password" name="password" autocomplete="current-password" required></label>
+    <button class="btn primary">Sign in</button>
+  </form>
+  <p class="muted small">Sessions end after 15 minutes of inactivity. Every access to health information is logged.</p>
+</div>
+{% endblock %}

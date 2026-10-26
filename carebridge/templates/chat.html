@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Companion{% endblock %}
+{% block content %}
+<div class="chat-page">
+  <h1>Recovery companion</h1>
+  <p class="muted small">I can explain your care plan and help you stay on track. I can't diagnose symptoms or change your medications. For that, contact your care team. For new or severe symptoms, call 911.</p>
+  <div class="chat-log" data-chat-log aria-live="polite">
+    {% for m in messages %}<div class="bubble {{ m.role }}">{{ m.content }}</div>{% endfor %}
+    {% if not messages %}
+    <div class="chips" data-chips>
+      <button class="chip" type="button">What medications do I take this morning?</button>
+      <button class="chip" type="button">How long should my walk be today?</button>
+      <button class="chip" type="button">I missed a dose. What should I do?</button>
+    </div>
+    {% endif %}
+  </div>
+  <form class="chat-bar" data-chat-form data-url="{{ url_for('chat_send') }}">
+    <textarea rows="1" maxlength="2000" placeholder="Ask about your care plan…" data-chat-input required></textarea>
+    <button class="btn primary">Send</button>
+  </form>
+  <template data-crisis-template>
+    <div class="bubble crisis-bubble">If you're thinking about hurting yourself, please call or text <a href="tel:988">988</a> now, or call <a href="tel:911">911</a> if you're in danger. Your care team has been notified. <a href="{{ url_for('support', urgent=1) }}">See support options</a>.</div>
+  </template>
+</div>
+{% endblock %}
